@@ -32,7 +32,7 @@ class Key_Active_CPT {
             'public'             => true,
             'publicly_queryable' => true,
             'show_ui'            => true,
-            'show_in_menu'       => true,
+            'show_in_menu'       => false, // Hide from admin menu
             'query_var'          => true,
             'rewrite'            => array( 'slug' => 'key_active' ),
             'capability_type'    => 'post',
