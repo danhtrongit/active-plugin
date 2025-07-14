@@ -13,76 +13,24 @@ class Key_Active_Metabox {
         
         if ($hook == 'post.php' || $hook == 'post-new.php') {
             if (isset($post) && $post->post_type === 'key_active') {
-                wp_add_inline_script('jquery', '
-                    jQuery(document).ready(function($) {
-                        function generateRandomKey() {
-                            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-                            var segments = 4;
-                            var segmentLength = 5;
-                            var key = "";
-                            
-                            for(var i = 0; i < segments; i++) {
-                                for(var j = 0; j < segmentLength; j++) {
-                                    var randomIndex = Math.floor(Math.random() * chars.length);
-                                    key += chars.charAt(randomIndex);
-                                }
-                                if(i < segments - 1) {
-                                    key += "-";
-                                }
-                            }
-                            
-                            return key;
-                        }
-                        
-                        $(".generate-key-button").on("click", function(e) {
-                            e.preventDefault();
-                            $("#title").val(generateRandomKey());
-                        });
-                        
-                        // Style improvements for the metabox
-                        $("#key_active_metabox .inside").css({
-                            "padding": "15px",
-                            "margin": "0"
-                        });
-                        
-                        $("#key_active_metabox label").css({
-                            "font-weight": "600",
-                            "margin-bottom": "5px",
-                            "display": "block"
-                        });
-                        
-                        $("#key_active_metabox input[type=\'text\'], #key_active_metabox input[type=\'email\']").css({
-                            "width": "100%",
-                            "padding": "8px 10px",
-                            "margin-bottom": "15px",
-                            "border-radius": "4px",
-                            "border": "1px solid #ddd"
-                        });
-                    });
-                ');
+                // Register and enqueue the CSS file
+                wp_register_style(
+                    'key-active-admin-css',
+                    plugin_dir_url( dirname( __FILE__ ) ) . 'assets/css/key-active-admin.css',
+                    array(),
+                    filemtime( plugin_dir_path( dirname( __FILE__ ) ) . 'assets/css/key-active-admin.css' )
+                );
+                wp_enqueue_style('key-active-admin-css');
                 
-                // Add custom styles for post edit screen
-                wp_add_inline_style('wp-admin', '
-                    .generate-key-button {
-                        background: #f0f0f1;
-                        border: 1px solid #ddd;
-                        border-radius: 4px;
-                        padding: 4px 10px;
-                        font-size: 13px;
-                        margin-left: 10px;
-                        cursor: pointer;
-                    }
-                    .generate-key-button:hover {
-                        background: #ddd;
-                    }
-                    #titlediv #title-prompt-text {
-                        padding: 3px 10px;
-                    }
-                    .key-active-edit-title {
-                        display: flex;
-                        align-items: center;
-                    }
-                ');
+                // Register and enqueue the JS file
+                wp_register_script(
+                    'key-active-admin-js',
+                    plugin_dir_url( dirname( __FILE__ ) ) . 'assets/js/key-active-admin.js',
+                    array('jquery'),
+                    filemtime( plugin_dir_path( dirname( __FILE__ ) ) . 'assets/js/key-active-admin.js' ),
+                    true
+                );
+                wp_enqueue_script('key-active-admin-js');
             }
         }
     }
