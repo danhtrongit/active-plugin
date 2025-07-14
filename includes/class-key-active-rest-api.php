@@ -6,39 +6,37 @@ add_action( 'rest_api_init', function () {
         array(
             'methods'  => 'GET',
             'callback' => 'check_key_active',
-            'permission_callback' => '__return_true'
         )
     );
-} );
+    } );
 
 
 function check_key_active(WP_REST_Request $request)
-{
+    {
     global $wpdb;
 
     $License = $request->get_param( 'License' );
     $Domain  = $request->get_param( 'Domain' );
     $Soft_Id = $request->get_param( 'Soft_Id' );
-    
-    // Dữ liệu trả về mặc định khi thành công
     $data    = [
-        "error"   => 0,
+        "error"   => 100,
         "success" => true,
-        "msg"     => "Giấy phép: " . $License . " - Hợp lệ",
+        "msg"     => "License: " . $License . " - Hợp lệ",
     ];
 
-    $post_id = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_title = %s AND post_type='key_active'", $License ) );
+    $post = $wpdb->get_var( $wpdb->prepare( "SELECT ID FROM $wpdb->posts WHERE post_title = %s AND post_type='key_active'", $License ) );
 
-    if ( $post_id ) {
-        $active_key = get_post( $post_id, OBJECT );
-        $meta_data  = get_post_meta( $active_key->ID );
+    if ( $post ) {
+        $active_key = get_post( $post, OBJECT );
+        $meta_data  = get_post_meta( $active_key->ID ); // Retrieve all post meta
 
-        $domain      = isset($meta_data['domain'][0]) ? $meta_data['domain'][0] : '';
-        $plugin_id   = isset($meta_data['plugin_id'][0]) ? $meta_data['plugin_id'][0] : '';
-        $plugin_name = isset($meta_data['plugin_name'][0]) ? $meta_data['plugin_name'][0] : '';
-        $version	 = isset($meta_data['version'][0]) ? $meta_data['version'][0] : '';
-        $status      = isset($meta_data['status'][0]) ? $meta_data['status'][0] : 'false';
-        $expire      = isset($meta_data['expire'][0]) ? $meta_data['expire'][0] : '';
+        $domain      = isset($meta_data['domain'][0]) 		? $meta_data['domain'][0] : '';
+        $plugin_id   = isset($meta_data['plugin_id'][0]) 	? $meta_data['plugin_id'][0] : '';
+        $plugin_name = isset($meta_data['plugin_name'][0]) 	? $meta_data['plugin_name'][0] : '';
+        $version	 = isset($meta_data['version'][0]) 		? $meta_data['version'][0] : '';
+		
+        $status      = $meta_data['status'][0];
+        $expire      = $meta_data['expire'][0];
 
         if ( $plugin_id !== $Soft_Id ) {
             $data = [
@@ -47,7 +45,7 @@ function check_key_active(WP_REST_Request $request)
                 "msg"     => "Plugin không hợp lệ.",
             ];
             return rest_ensure_response( $data );
-        }
+            }
 
         if ( $domain !== $Domain ) {
             $data = [
@@ -56,26 +54,28 @@ function check_key_active(WP_REST_Request $request)
                 "msg"     => "Tên miền không hợp lệ.",
             ];
             return rest_ensure_response( $data );
-        }
+            }
 
-        if ( $status !== 'true' ) {
-            $data = [
-                "error"   => 104, // Changed from 102 to avoid conflict
+		if ( $status == 'true' ) {
+			$status = "Active";
+		} else {
+			$status = "Inactive";
+			 $data = [
+                "error"   => 102,
                 "success" => false,
-                "msg"     => "Giấy phép đã bị vô hiệu hoá! Vui lòng liên hệ Zalo: 0813.908.901.",
+                "msg"     => "Bị vô hiệu hoá rùi! Liên hệ Zalo: <strong style='color:green'> 0813.908.901 </strong>.",
             ];
             return rest_ensure_response( $data );
-        }
-        
-        $is_expired = ! empty( $expire ) && time() > strtotime( $expire );
-        if ( $is_expired ) {
-            $data = [
-                "error"   => 105,
-                "success" => false,
-                "msg"     => "Giấy phép đã hết hạn.",
-            ];
-            return rest_ensure_response( $data );
-        }
+		}
+        $date     = '';
+        $isExpire = !isset($meta_data['expire']) || $meta_data['expire'][0] == '';
+
+        if ( $isExpire ) {
+            $date = date_create();
+            date_add( $date, date_interval_create_from_date_string( "999 years" ) );
+            } else {
+            $date = date_create( $meta_data['expire'][0] );
+            }
 
         $plugin = [
             "row"             => $active_key->ID,
@@ -88,36 +88,30 @@ function check_key_active(WP_REST_Request $request)
             "Update New Core" => "",
         ];
 
-        $license_status = ($status === 'true') ? 'Active' : 'Inactive';
-        $expiry_date_formatted = $expire ? date( 'd-m-Y', strtotime( $expire ) ) : 'Vĩnh viễn';
-        
-        $license = [
+        $license         = [
             "row"            => $active_key->ID,
             "License"        => $License,
             "Soft_Id"        => $plugin_id,
             "Soft_Name"      => $plugin_name,
             "Price"          => "",
             "Domain"         => $domain,
-            "Expiry_Date"    => $expiry_date_formatted,
-            "Customer_Name"  => isset($meta_data['person'][0]) ? $meta_data['person'][0] : "Tran Danh Trong",
+            "Expiry_Date"    => $expire ? date( 'd-m-Y', strtotime( $expire ) ) : '',
+            "Customer_Name"  => "Tran Danh Trong",
             "Customer_Phone" => "0813908901",
-            "Customer_Email" => isset($meta_data['email'][0]) ? $meta_data['email'][0] : "codevnes@gmail.com",
-            "Status"         => $license_status,
+            "Customer_Email" => "codevnes@gmail.com",
+            "Status"         => $status,
             "Expiry_C_Use"   => "",
-            "Timestamp"      => $expire ? strtotime($expire) : '',
+            "Timestamp"      => $isExpire ? '' : $date->getTimestamp(),
             "Note"           => "",
         ];
-        
         $data['plugin']  = $plugin;
         $data['license'] = $license;
-        
-    } else {
+        } else {
         $data = [
             "error"   => 103,
             "success" => false,
-            "msg"     => "Giấy phép: " . $License . " - không hợp lệ",
+            "msg"     => "License:" . $License . " -  không hợp lệ",
         ];
-    }
-    
+        }
     return rest_ensure_response( $data );
-}
+    }
