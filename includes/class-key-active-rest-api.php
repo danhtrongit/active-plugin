@@ -16,12 +16,11 @@ class Key_Active_REST_API {
                 'permission_callback' => '__return_true',
             )
         );
-    
-    
+    }
+
     public function check_key_active(WP_REST_Request $request)
     {
-        global $wpdb;
-    
+        global $wpdb;    
         $License = $request->get_param( 'License' ); 
         $Domain  = $request->get_param( 'Domain' );
         $Soft_Id = $request->get_param( 'Soft_Id' );
@@ -75,13 +74,13 @@ class Key_Active_REST_API {
                 return rest_ensure_response( $data );
             }
             $date     = '';
-            $isExpire = !isset($meta['expire']) || $meta['expire'] == '';
+            $isExpire = !isset($meta_data['expire'][0]) || $meta_data['expire'][0] == '';
     
             if ( $isExpire ) {
                 $date = date_create();
                 date_add( $date, date_interval_create_from_date_string( "999 years" ) );
                 } else {
-                $date = date_create( $meta['expire'] );
+                $date = date_create( $expire );
                 }
     
             $plugin = [
