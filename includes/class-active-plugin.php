@@ -19,12 +19,14 @@ class Active_Plugin {
         require_once plugin_dir_path( __FILE__ ) . 'class-key-active-cpt.php';
         require_once plugin_dir_path( __FILE__ ) . 'class-key-active-metabox.php';
         require_once plugin_dir_path( __FILE__ ) . 'class-key-active-rest-api.php';
+        require_once plugin_dir_path( __FILE__ ) . 'class-key-active-admin.php';
     }
 
     private function init() {
         new Key_Active_CPT();
         new Key_Active_Metabox();
         new Key_Active_REST_API();
+        new Key_Active_Admin();
     }
 
     public function get_version() {

@@ -4,6 +4,11 @@ class Key_Active_CPT {
 
     public function __construct() {
         add_action( 'init', array( $this, 'register' ) );
+        add_action( 'admin_menu', array( $this, 'remove_add_new_submenu' ) );
+    }
+
+    public function remove_add_new_submenu() {
+        remove_submenu_page( 'edit.php?post_type=key_active', 'post-new.php?post_type=key_active' );
     }
 
     public function register() {
