@@ -5,6 +5,86 @@ class Key_Active_Metabox {
     public function __construct() {
         add_action( 'add_meta_boxes', array( $this, 'add_metabox' ) );
         add_action( 'save_post_key_active', array( $this, 'save_metabox' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_metabox_scripts' ) );
+    }
+
+    public function enqueue_metabox_scripts($hook) {
+        global $post;
+        
+        if ($hook == 'post.php' || $hook == 'post-new.php') {
+            if (isset($post) && $post->post_type === 'key_active') {
+                wp_add_inline_script('jquery', '
+                    jQuery(document).ready(function($) {
+                        function generateRandomKey() {
+                            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                            var segments = 4;
+                            var segmentLength = 5;
+                            var key = "";
+                            
+                            for(var i = 0; i < segments; i++) {
+                                for(var j = 0; j < segmentLength; j++) {
+                                    var randomIndex = Math.floor(Math.random() * chars.length);
+                                    key += chars.charAt(randomIndex);
+                                }
+                                if(i < segments - 1) {
+                                    key += "-";
+                                }
+                            }
+                            
+                            return key;
+                        }
+                        
+                        $(".generate-key-button").on("click", function(e) {
+                            e.preventDefault();
+                            $("#title").val(generateRandomKey());
+                        });
+                        
+                        // Style improvements for the metabox
+                        $("#key_active_metabox .inside").css({
+                            "padding": "15px",
+                            "margin": "0"
+                        });
+                        
+                        $("#key_active_metabox label").css({
+                            "font-weight": "600",
+                            "margin-bottom": "5px",
+                            "display": "block"
+                        });
+                        
+                        $("#key_active_metabox input[type=\'text\'], #key_active_metabox input[type=\'email\']").css({
+                            "width": "100%",
+                            "padding": "8px 10px",
+                            "margin-bottom": "15px",
+                            "border-radius": "4px",
+                            "border": "1px solid #ddd"
+                        });
+                    });
+                ');
+                
+                // Add custom styles for post edit screen
+                wp_add_inline_style('wp-admin', '
+                    .generate-key-button {
+                        background: #f0f0f1;
+                        border: 1px solid #ddd;
+                        border-radius: 4px;
+                        padding: 4px 10px;
+                        font-size: 13px;
+                        margin-left: 10px;
+                        cursor: pointer;
+                    }
+                    .generate-key-button:hover {
+                        background: #ddd;
+                    }
+                    #titlediv #title-prompt-text {
+                        padding: 3px 10px;
+                    }
+                    .key-active-edit-title {
+                        display: flex;
+                        align-items: center;
+                    }
+                ');
+            }
+        }
     }
 
     public function add_metabox() {
@@ -16,6 +96,21 @@ class Key_Active_Metabox {
             'normal',
             'high'
         );
+        
+        // Add a note/instructions in the title area
+        add_action('edit_form_after_title', array($this, 'add_title_instructions'));
+    }
+    
+    public function add_title_instructions($post) {
+        if ($post->post_type !== 'key_active') {
+            return;
+        }
+        ?>
+        <div class="key-active-edit-title">
+            <p><em>License Key hiển thị phía trên. Bấm nút bên dưới để tạo key ngẫu nhiên mới.</em></p>
+            <button type="button" class="generate-key-button">Tạo Key mới</button>
+        </div>
+        <?php
     }
 
     public function render_metabox( $post ) {
