@@ -5,16 +5,188 @@ class Key_Active_Admin {
     public function __construct() {
         add_action( 'admin_menu', array( $this, 'add_management_page' ) );
         add_action( 'admin_init', array( $this, 'handle_form_actions' ) );
+        add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_styles' ) );
+    }
+
+    public function enqueue_admin_styles($hook) {
+        if (strpos($hook, 'key_active_management') !== false) {
+            wp_enqueue_style('wp-color-picker');
+            wp_enqueue_script('wp-color-picker');
+            
+            // Add inline styles for the admin page
+            wp_add_inline_style('admin-styles', '
+                .key-active-wrap {
+                    margin: 20px 20px 0 0;
+                    background: #fff;
+                    border-radius: 8px;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                    overflow: hidden;
+                }
+                .key-active-header {
+                    padding: 20px 25px;
+                    background: #f8f9fa;
+                    border-bottom: 1px solid #e8e8e8;
+                }
+                .key-active-header h1 {
+                    margin: 0;
+                    color: #23282d;
+                    font-size: 24px;
+                }
+                .key-active-content {
+                    padding: 25px;
+                }
+                .key-active-dashboard {
+                    display: flex;
+                    flex-wrap: wrap;
+                    margin-bottom: 25px;
+                }
+                .key-active-card {
+                    background: #f8f9fa;
+                    border-radius: 6px;
+                    padding: 20px;
+                    margin-right: 20px;
+                    margin-bottom: 20px;
+                    min-width: 200px;
+                    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+                }
+                .key-active-card h3 {
+                    margin-top: 0;
+                    color: #50575e;
+                }
+                .key-active-card .number {
+                    font-size: 32px;
+                    font-weight: 600;
+                    color: #2271b1;
+                }
+                #col-container {
+                    display: flex;
+                    flex-wrap: wrap;
+                }
+                #col-left {
+                    width: 35%;
+                    padding-right: 25px;
+                }
+                #col-right {
+                    width: 65%;
+                }
+                .key-active-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                .key-active-table th {
+                    text-align: left;
+                    padding: 12px 16px;
+                    background: #f8f9fa;
+                    border-bottom: 2px solid #e8e8e8;
+                    font-weight: 600;
+                }
+                .key-active-table td {
+                    padding: 12px 16px;
+                    border-bottom: 1px solid #e8e8e8;
+                }
+                .key-active-table tr:hover {
+                    background-color: #f9f9f9;
+                }
+                .key-active-form label {
+                    display: block;
+                    margin-bottom: 5px;
+                    font-weight: 600;
+                }
+                .key-active-form input[type="text"],
+                .key-active-form input[type="email"],
+                .key-active-form input[type="date"] {
+                    width: 100%;
+                    padding: 8px 12px;
+                    margin-bottom: 15px;
+                    border-radius: 4px;
+                    border: 1px solid #ddd;
+                }
+                .key-active-form .submit-btn {
+                    background: #2271b1;
+                    color: #fff;
+                    border: none;
+                    padding: 10px 15px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: 600;
+                }
+                .key-active-form .submit-btn:hover {
+                    background: #135e96;
+                }
+                .key-badge {
+                    display: inline-block;
+                    padding: 4px 8px;
+                    border-radius: 3px;
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+                .key-badge-active {
+                    background: #d1e7dd;
+                    color: #0f5132;
+                }
+                .key-badge-inactive {
+                    background: #f8d7da;
+                    color: #842029;
+                }
+                .key-actions a {
+                    margin-right: 10px;
+                    text-decoration: none;
+                }
+                .key-actions .edit {
+                    color: #2271b1;
+                }
+                .key-actions .delete {
+                    color: #b32d2e;
+                }
+                .notice-custom {
+                    background: #f0f6fc;
+                    border-left: 4px solid #2271b1;
+                    box-shadow: 0 1px 1px rgba(0,0,0,.04);
+                    margin: 0 0 20px;
+                    padding: 12px;
+                }
+                @media screen and (max-width: 782px) {
+                    #col-left, #col-right {
+                        width: 100%;
+                        padding-right: 0;
+                    }
+                    .key-active-card {
+                        width: 100%;
+                    }
+                }
+            ');
+        }
     }
 
     public function add_management_page() {
+        // Add a top-level menu item
+        add_menu_page(
+            'Quản lý Key',         // Page title
+            'Quản lý Key',         // Menu title
+            'manage_options',      // Capability
+            'key_active_management', // Menu slug
+            array( $this, 'render_management_page' ), // Callback function
+            'dashicons-lock',      // Icon
+            30                     // Position
+        );
+        
+        // Add submenu items
         add_submenu_page(
-            'edit.php?post_type=key_active',
-            'Quản lý Key',
-            'Quản lý Key',
-            'manage_options',
-            'key_active_management',
-            array( $this, 'render_management_page' )
+            'key_active_management',    // Parent slug
+            'Tất cả Key',               // Page title
+            'Tất cả Key',               // Menu title
+            'manage_options',           // Capability
+            'key_active_management',    // Menu slug (same as parent to overwrite)
+            array( $this, 'render_management_page' ) // Callback function
+        );
+        
+        add_submenu_page(
+            'key_active_management',    // Parent slug
+            'Thêm Key mới',             // Page title
+            'Thêm Key mới',             // Menu title
+            'manage_options',           // Capability
+            'key_active_add_new',       // Menu slug
+            array( $this, 'render_add_new_page' ) // Callback function
         );
     }
 
@@ -50,118 +222,176 @@ class Key_Active_Admin {
             update_post_meta( $post_id, 'status', $status );
 
             // Redirect to avoid form resubmission
-            wp_redirect( admin_url( 'edit.php?post_type=key_active&page=key_active_management&message=1' ) );
+            wp_redirect( admin_url( 'admin.php?page=key_active_management&message=1' ) );
             exit;
         }
     }
 
     private function delete_key( $post_id ) {
         wp_delete_post( $post_id, true ); // true to bypass trash and force delete
-        wp_redirect( admin_url( 'edit.php?post_type=key_active&page=key_active_management&message=2' ) );
+        wp_redirect( admin_url( 'admin.php?page=key_active_management&message=2' ) );
         exit;
     }
 
-    public function render_management_page() {
+    public function render_add_new_page() {
         ?>
-        <div class="wrap">
-            <h1>Quản lý Key</h1>
+        <div class="wrap key-active-wrap">
+            <div class="key-active-header">
+                <h1><span class="dashicons dashicons-plus-alt" style="font-size: 30px; height: 30px; width: 30px; padding-right: 10px;"></span> Thêm Key mới</h1>
+            </div>
+            <div class="key-active-content">
+                <form method="post" action="" class="key-active-form">
+                    <?php wp_nonce_field( 'add_new_key_nonce' ); ?>
+                    <div class="form-field">
+                        <label for="license_key">License Key</label>
+                        <input type="text" name="license_key" id="license_key" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="email">Email</label>
+                        <input type="email" name="email" id="email">
+                    </div>
+                    <div class="form-field">
+                        <label for="person">Người dùng</label>
+                        <input type="text" name="person" id="person">
+                    </div>
+                    <div class="form-field">
+                        <label for="plugin_id">ID Plugin</label>
+                        <input type="text" name="plugin_id" id="plugin_id">
+                    </div>
+                    <div class="form-field">
+                        <label for="plugin_name">Tên Plugin</label>
+                        <input type="text" name="plugin_name" id="plugin_name">
+                    </div>
+                    <div class="form-field">
+                        <label for="domain">Tên miền</label>
+                        <input type="text" name="domain" id="domain">
+                    </div>
+                    <div class="form-field">
+                        <label for="version">Phiên bản</label>
+                        <input type="text" name="version" id="version">
+                    </div>
+                    <div class="form-field">
+                        <label for="expire">Ngày hết hạn</label>
+                        <input type="date" name="expire" id="expire">
+                    </div>
+                    <div class="form-field">
+                        <label for="status">Trạng thái</label>
+                        <input type="checkbox" name="status" id="status" checked> Kích hoạt
+                    </div>
+                    <input type="submit" name="submit_new_key" value="Thêm Key mới" class="submit-btn">
+                </form>
+            </div>
+        </div>
+        <?php
+    }
 
-            <?php if ( isset( $_GET['message'] ) && $_GET['message'] == '1' ) : ?>
-                <div id="message" class="updated notice is-dismissible"><p>Key đã được tạo thành công.</p></div>
-            <?php elseif ( isset( $_GET['message'] ) && $_GET['message'] == '2' ) : ?>
-                <div id="message" class="updated notice is-dismissible"><p>Key đã được xóa thành công.</p></div>
-            <?php endif; ?>
+    public function render_management_page() {
+        // Count active and inactive keys
+        $active_count = 0;
+        $inactive_count = 0;
+        $total_count = 0;
+        
+        $args = array('post_type' => 'key_active', 'posts_per_page' => -1);
+        $keys = get_posts($args);
+        
+        foreach ($keys as $key) {
+            $total_count++;
+            $status = get_post_meta($key->ID, 'status', true);
+            if ($status === 'true') {
+                $active_count++;
+            } else {
+                $inactive_count++;
+            }
+        }
+        ?>
+        <div class="wrap key-active-wrap">
+            <div class="key-active-header">
+                <h1><span class="dashicons dashicons-lock" style="font-size: 30px; height: 30px; width: 30px; padding-right: 10px;"></span> Quản lý Key</h1>
+            </div>
 
-            <div id="col-container">
-                <div id="col-right">
-                    <div class="col-wrap">
-                        <h2>Danh sách Key</h2>
-                        <table class="wp-list-table widefat fixed striped">
-                            <thead>
-                                <tr>
-                                    <th>License Key</th>
-                                    <th>Domain</th>
-                                    <th>Tên Plugin</th>
-                                    <th>Ngày hết hạn</th>
-                                    <th>Trạng thái</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php
-                                $args = array( 'post_type' => 'key_active', 'posts_per_page' => -1 );
-                                $key_posts = get_posts( $args );
-                                if ( $key_posts ) :
-                                    foreach ( $key_posts as $post ) : setup_postdata( $post );
-                                        $delete_url = wp_nonce_url( admin_url('edit.php?post_type=key_active&page=key_active_management&action=delete&key_id=' . $post->ID), 'delete_key_' . $post->ID );
-                                    ?>
-                                    <tr>
-                                        <td>
-                                            <strong><a href="<?php echo get_edit_post_link( $post->ID ); ?>"><?php echo esc_html( $post->post_title ); ?></a></strong>
-                                            <div class="row-actions">
-                                                <span class="edit"><a href="<?php echo get_edit_post_link( $post->ID ); ?>">Sửa</a> | </span>
-                                                <span class="delete"><a href="<?php echo esc_url( $delete_url ); ?>" class="text-danger" onclick="return confirm('Bạn có chắc muốn xóa key này?')">Xóa</a></span>
-                                            </div>
-                                        </td>
-                                        <td><?php echo esc_html( get_post_meta( $post->ID, 'domain', true ) ); ?></td>
-                                        <td><?php echo esc_html( get_post_meta( $post->ID, 'plugin_name', true ) ); ?></td>
-                                        <td><?php echo esc_html( get_post_meta( $post->ID, 'expire', true ) ); ?></td>
-                                        <td><?php echo get_post_meta( $post->ID, 'status', true ) === 'true' ? 'Kích hoạt' : 'Vô hiệu hóa'; ?></td>
-                                    </tr>
-                                <?php endforeach; wp_reset_postdata(); else : ?>
-                                    <tr><td colspan="5">Chưa có key nào.</td></tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+            <div class="key-active-content">
+                <?php if ( isset( $_GET['message'] ) && $_GET['message'] == '1' ) : ?>
+                    <div class="notice-custom">
+                        <p>Key đã được tạo thành công.</p>
+                    </div>
+                <?php elseif ( isset( $_GET['message'] ) && $_GET['message'] == '2' ) : ?>
+                    <div class="notice-custom">
+                        <p>Key đã được xóa thành công.</p>
+                    </div>
+                <?php endif; ?>
+
+                <div class="key-active-dashboard">
+                    <div class="key-active-card">
+                        <h3>Tổng số Key</h3>
+                        <div class="number"><?php echo $total_count; ?></div>
+                    </div>
+                    <div class="key-active-card">
+                        <h3>Key đang kích hoạt</h3>
+                        <div class="number"><?php echo $active_count; ?></div>
+                    </div>
+                    <div class="key-active-card">
+                        <h3>Key vô hiệu hóa</h3>
+                        <div class="number"><?php echo $inactive_count; ?></div>
                     </div>
                 </div>
-                <div id="col-left">
-                    <div class="col-wrap">
-                        <h2>Thêm Key mới</h2>
-                        <form method="post" action="">
-                            <?php wp_nonce_field( 'add_new_key_nonce' ); ?>
-                            <div class="form-field">
-                                <label for="license_key">License Key</label>
-                                <input type="text" name="license_key" id="license_key" required class="widefat">
-                            </div>
-                            <div class="form-field">
-                                <label for="email">Email</label>
-                                <input type="email" name="email" id="email" class="widefat">
-                            </div>
-                            <div class="form-field">
-                                <label for="person">Người dùng</label>
-                                <input type="text" name="person" id="person" class="widefat">
-                            </div>
-                            <div class="form-field">
-                                <label for="plugin_id">ID Plugin</label>
-                                <input type="text" name="plugin_id" id="plugin_id" class="widefat">
-                            </div>
-                            <div class="form-field">
-                                <label for="plugin_name">Tên Plugin</label>
-                                <input type="text" name="plugin_name" id="plugin_name" class="widefat">
-                            </div>
-                            <div class="form-field">
-                                <label for="domain">Tên miền</label>
-                                <input type="text" name="domain" id="domain" class="widefat">
-                            </div>
-                            <div class="form-field">
-                                <label for="version">Phiên bản</label>
-                                <input type="text" name="version" id="version" class="widefat">
-                            </div>
-                            <div class="form-field">
-                                <label for="expire">Ngày hết hạn</label>
-                                <input type="date" name="expire" id="expire">
-                            </div>
-                            <div class="form-field">
-                                <label for="status">Trạng thái</label>
-                                <input type="checkbox" name="status" id="status" checked> Kích hoạt
-                            </div>
-                            <?php submit_button( 'Thêm Key mới', 'primary', 'submit_new_key' ); ?>
-                        </form>
+
+                <div>
+                    <div style="margin-bottom: 20px">
+                        <a href="<?php echo admin_url('admin.php?page=key_active_add_new'); ?>" class="button button-primary">
+                            <span class="dashicons dashicons-plus" style="vertical-align: middle;"></span> Thêm Key mới
+                        </a>
                     </div>
+                    
+                    <table class="key-active-table">
+                        <thead>
+                            <tr>
+                                <th>License Key</th>
+                                <th>Domain</th>
+                                <th>Tên Plugin</th>
+                                <th>Ngày hết hạn</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            $args = array( 'post_type' => 'key_active', 'posts_per_page' => -1 );
+                            $key_posts = get_posts( $args );
+                            if ( $key_posts ) :
+                                foreach ( $key_posts as $post ) : setup_postdata( $post );
+                                    $delete_url = wp_nonce_url( admin_url('admin.php?page=key_active_management&action=delete&key_id=' . $post->ID), 'delete_key_' . $post->ID );
+                                    $edit_url = admin_url('post.php?post=' . $post->ID . '&action=edit');
+                                    $status = get_post_meta($post->ID, 'status', true);
+                                ?>
+                                <tr>
+                                    <td>
+                                        <strong><?php echo esc_html( $post->post_title ); ?></strong>
+                                    </td>
+                                    <td><?php echo esc_html( get_post_meta( $post->ID, 'domain', true ) ); ?></td>
+                                    <td><?php echo esc_html( get_post_meta( $post->ID, 'plugin_name', true ) ); ?></td>
+                                    <td><?php echo esc_html( get_post_meta( $post->ID, 'expire', true ) ); ?></td>
+                                    <td>
+                                        <span class="key-badge <?php echo $status === 'true' ? 'key-badge-active' : 'key-badge-inactive'; ?>">
+                                            <?php echo $status === 'true' ? 'Kích hoạt' : 'Vô hiệu hóa'; ?>
+                                        </span>
+                                    </td>
+                                    <td class="key-actions">
+                                        <a href="<?php echo esc_url( $edit_url ); ?>" class="edit">
+                                            <span class="dashicons dashicons-edit"></span> Sửa
+                                        </a>
+                                        <a href="<?php echo esc_url( $delete_url ); ?>" class="delete" onclick="return confirm('Bạn có chắc muốn xóa key này?')">
+                                            <span class="dashicons dashicons-trash"></span> Xóa
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; wp_reset_postdata(); else : ?>
+                                <tr><td colspan="6">Chưa có key nào.</td></tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
-        <style>#col-left { width: 30%; } #col-right { width: 68%; float: right; }</style>
         <?php
     }
 } 
