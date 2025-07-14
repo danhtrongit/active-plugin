@@ -121,8 +121,6 @@ class Active_Plugin
 
 
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/admin-ajax.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'classes/class-create-active-plugin.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'classes/class-api.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the public-facing
