@@ -1,6 +1,6 @@
 <?php
 /**
- * Plugin Name:       Active Plugin
+ * Plugin Name:       AM
  * Plugin URI:        https://example.com/
  * Description:       A simple, restructured plugin.
  * Version:           1.0.0
